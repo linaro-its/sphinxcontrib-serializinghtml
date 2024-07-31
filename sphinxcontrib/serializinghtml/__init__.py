@@ -104,6 +104,7 @@ class SerializingHTMLBuilder(StandaloneHTMLBuilder):
                     page_filename = self.get_builder_config('project_name', 'html')
                 else:
                     page_filename = SEP.join(parts[:-1])
+                ctx['current_page_name'] = page_filename
             else:
                 page_filename = pagename
             outfilename = path.join(self.outdir,
