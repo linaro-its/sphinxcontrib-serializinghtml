@@ -11,7 +11,7 @@ from sphinx.builders.html import BuildInfo, StandaloneHTMLBuilder
 from sphinx.locale import get_translation
 from sphinx.util.osutil import SEP, copyfile, ensuredir, os_path
 
-from sphinxcontrib.serializinghtml import jsonimpl
+from sphinxcontrib.serializinghtml import jsonimpl, nav_html_to_json
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -91,9 +91,23 @@ class SerializingHTMLBuilder(StandaloneHTMLBuilder):
         ctx.setdefault('pathto', lambda p: p)
         self.add_sidebars(pagename, ctx)
 
+        # Add the toc tree as a JSON dictionary
+        ctx['toctree'] = nav_html_to_json.convert_nav_html_to_json(self._get_local_toctree(pagename))
+
         if not outfilename:
+            # PJC: Ensure that index files are actually written under the name of the
+            #      directory leafname.
+            parts = pagename.split(SEP)
+            if parts[len(parts)-1] == "index":
+                if len(parts) == 1:
+                    # Use the project name
+                    page_filename = self.get_builder_config('project_name', 'html')
+                else:
+                    page_filename = SEP.join(parts[:-1])
+            else:
+                page_filename = pagename
             outfilename = path.join(self.outdir,
-                                    os_path(pagename) + self.out_suffix)
+                                    os_path(page_filename) + self.out_suffix)
 
         # we're not taking the return value here, since no template is
         # actually rendered
@@ -161,7 +175,7 @@ class JSONHTMLBuilder(SerializingHTMLBuilder):
     implementation_dumps_unicode = True
     indexer_format = jsonimpl
     indexer_dumps_unicode = True
-    out_suffix = '.fjson'
+    out_suffix = '.json'
     globalcontext_filename = 'globalcontext.json'
     searchindex_filename = 'searchindex.json'
 

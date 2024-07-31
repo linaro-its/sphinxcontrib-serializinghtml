@@ -1,22 +1,5 @@
-=============================
-sphinxcontrib-serializinghtml
-=============================
+This is a fork of https://github.com/sphinx-doc/sphinxcontrib-serializinghtml
 
-sphinxcontrib-serializinghtml is a sphinx extension which outputs
-"serialized" HTML files (json and pickle).
+Changes made to this fork are to facilitate the creation of JSON files suitable for consumption by React.
 
-For more details, please visit http://www.sphinx-doc.org/.
-
-Installing
-==========
-
-Install from PyPI::
-
-   pip install -U sphinxcontrib-serializinghtml
-
-Contributing
-============
-
-See `CONTRIBUTING.rst`__
-
-.. __: https://github.com/sphinx-doc/sphinx/blob/master/CONTRIBUTING.rst
+Since those changes are very specific, they have not been contributed back to the original repo.

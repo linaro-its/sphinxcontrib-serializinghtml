@@ -40,7 +40,7 @@ classifiers = [
     "Topic :: Text Processing",
     "Topic :: Utilities",
 ]
-dependencies = []
+dependencies = ["beautifulsoup4"]
 dynamic = ["version"]
 
 [project.optional-dependencies]
