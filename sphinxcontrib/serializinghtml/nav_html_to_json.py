@@ -1,6 +1,14 @@
 from bs4 import BeautifulSoup, element
 import json
 
+def clean_href(href: str) -> str:
+    """ Make sure the href doesn't start or end with a / """
+    if href[0] == "/":
+        href = href[1:]
+    if href[-1] == "/":
+        href = href[:-1]
+    return href
+
 def section_links(parent_entry: element.Tag, list_entry: element.Tag) -> dict:
     section_result = []
     for child in list_entry.children:
@@ -9,7 +17,7 @@ def section_links(parent_entry: element.Tag, list_entry: element.Tag) -> dict:
     return {
                 "type": "expandable-link-group",
                 "text": parent_entry.contents[0].contents[0],
-                "href": parent_entry.contents[0]["href"],
+                "href": clean_href(parent_entry.contents[0]["href"]),
                 "items": section_result
             }
 
@@ -20,7 +28,7 @@ def convert_tag_to_link(item_entry: element.Tag) -> dict:
     return {
             "type": "link",
             "text": a_tag.contents[0],
-            "href": a_tag["href"]
+            "href": clean_href(a_tag["href"])
         }
 
 def convert_nav_html_to_json(html: str) -> list:
