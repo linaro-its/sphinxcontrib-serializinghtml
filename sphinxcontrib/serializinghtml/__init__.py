@@ -23,7 +23,7 @@ if TYPE_CHECKING:
         def load(self, file: Any, *args: Any, **kwargs: Any) -> Any: ...
         def loads(self, data: Any, *args: Any, **kwargs: Any) -> Any: ...
 
-__version__ = '2.0.0+Linaro'
+__version__ = '2.0.0+Linaro-240806'
 __version_info__ = (2, 0, 0)
 
 package_dir = path.abspath(path.dirname(__file__))
@@ -83,11 +83,16 @@ class SerializingHTMLBuilder(StandaloneHTMLBuilder):
         self.use_index = self.get_builder_config('use_index', 'html')
 
     def get_target_uri(self, docname: str, typ: str | None = None) -> str:
+        print(f"get_target_uri: {docname}")
+        # For the Solutions Hub, we want all URIs to be absolute. They will
+        # all be /library/<project_name>/<docname> except that "index" will
+        # get trimmed off
+        project_name = self.get_builder_config('project_name', 'html')
         if docname == 'index':
-            return ''
+            return f"/library/{project_name}/{project_name}"
         if docname.endswith(SEP + 'index'):
-            return docname[:-5]  # up to sep
-        return docname + SEP
+            return f"/library/{project_name}/{docname[:-5]}"  # up to sep
+        return f"/library/{project_name}/{docname}"
 
     def dump_context(self, context: dict[str, Any], filename: str | os.PathLike[str]) -> None:
         context = context.copy()
