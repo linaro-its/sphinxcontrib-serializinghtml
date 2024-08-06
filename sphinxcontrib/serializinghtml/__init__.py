@@ -83,15 +83,11 @@ class SerializingHTMLBuilder(StandaloneHTMLBuilder):
         self.use_index = self.get_builder_config('use_index', 'html')
 
     def get_target_uri(self, docname: str, typ: str | None = None) -> str:
-        # For the Solutions Hub, we want all URIs to be absolute. They will
-        # all be /library/<project_name>/<docname> except that "index" will
-        # get trimmed off
-        project_name = self.get_builder_config('project_name', 'html')
         if docname == 'index':
-            return f"/library/{project_name}/{project_name}"
+            return "/"
         if docname.endswith(SEP + 'index'):
-            return f"/library/{project_name}/{docname[:-5]}"  # up to sep
-        return f"/library/{project_name}/{docname}"
+            return f"/{docname[:-5]}"  # up to sep
+        return f"/{docname}"
 
     def dump_context(self, context: dict[str, Any], filename: str | os.PathLike[str]) -> None:
         context = context.copy()
