@@ -83,7 +83,6 @@ class SerializingHTMLBuilder(StandaloneHTMLBuilder):
         self.use_index = self.get_builder_config('use_index', 'html')
 
     def get_target_uri(self, docname: str, typ: str | None = None) -> str:
-        print(f"get_target_uri: {docname}")
         # For the Solutions Hub, we want all URIs to be absolute. They will
         # all be /library/<project_name>/<docname> except that "index" will
         # get trimmed off
