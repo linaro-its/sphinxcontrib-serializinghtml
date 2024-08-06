@@ -84,10 +84,10 @@ class SerializingHTMLBuilder(StandaloneHTMLBuilder):
 
     def get_target_uri(self, docname: str, typ: str | None = None) -> str:
         if docname == 'index':
-            return "/"
+            return ""
         if docname.endswith(SEP + 'index'):
-            return f"/{docname[:-5]}"  # up to sep
-        return f"/{docname}"
+            return docname[:-5]  # up to sep
+        return docname
 
     def dump_context(self, context: dict[str, Any], filename: str | os.PathLike[str]) -> None:
         context = context.copy()
