@@ -39,24 +39,25 @@ def convert_nav_html_to_json(html: str) -> list:
     ul = soup.ul
     pending_divider = False
     # Iterate through list items
-    for child in ul.children:
-        if type(child) is element.Tag and child.name == "li":
-            # Is there a new unordered list within this section?
-            section = child.find_all("ul", limit=1)
-            if section != []:
-                # Yes, there is, so we have a sub-section. If we've got some content
-                # already, add a divider.
-                if result != []:
-                    result.append({ "type": "divider" })
-                # Now append the current page and the section links. The
-                # ul tag is the only child returned, hence [0]
-                result.append(section_links(child, section[0]))
-                # If there are any "normal" entries after this section
-                # add a divider first
-                pending_divider = True
-            else:
-                if pending_divider:
-                    result.append({ "type": "divider" })
-                    pending_divider = False
-                result.append(convert_tag_to_link(child))
+    if ul is not None:
+        for child in ul.children:
+            if type(child) is element.Tag and child.name == "li":
+                # Is there a new unordered list within this section?
+                section = child.find_all("ul", limit=1)
+                if section != []:
+                    # Yes, there is, so we have a sub-section. If we've got some content
+                    # already, add a divider.
+                    if result != []:
+                        result.append({ "type": "divider" })
+                    # Now append the current page and the section links. The
+                    # ul tag is the only child returned, hence [0]
+                    result.append(section_links(child, section[0]))
+                    # If there are any "normal" entries after this section
+                    # add a divider first
+                    pending_divider = True
+                else:
+                    if pending_divider:
+                        result.append({ "type": "divider" })
+                        pending_divider = False
+                    result.append(convert_tag_to_link(child))
     return result
