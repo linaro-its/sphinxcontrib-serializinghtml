@@ -11,7 +11,7 @@ from sphinx.builders.html import BuildInfo, StandaloneHTMLBuilder
 from sphinx.locale import get_translation
 from sphinx.util.osutil import SEP, copyfile, ensuredir, os_path
 
-from sphinxcontrib.serializinghtml import jsonimpl, nav_html_to_json
+from sphinxcontrib.serializinghtml import html_assists, jsonimpl
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -109,7 +109,7 @@ class SerializingHTMLBuilder(StandaloneHTMLBuilder):
         self.add_sidebars(pagename, ctx)
 
         # Add the toc tree as a JSON dictionary
-        ctx['toctree'] = nav_html_to_json.convert_nav_html_to_json(self._get_local_toctree(pagename))
+        ctx['toctree'] = html_assists.convert_nav_html_to_json(self._get_local_toctree(pagename))
 
         if not outfilename:
             # PJC: Ensure that index files are actually written under the name of the
@@ -135,6 +135,13 @@ class SerializingHTMLBuilder(StandaloneHTMLBuilder):
         for key in list(ctx):
             if isinstance(ctx[key], types.FunctionType):
                 del ctx[key]
+
+        # PJC: Some Linaro documentation has encoded attributes in image ALT text
+        # which then gets decoded when the HTML is loaded into the DOM, so
+        # we need to alter it by "escaping" the ampersands with &amp; to
+        # prevent the decoding.
+        if "body" in ctx:
+            ctx['body'] = html_assists.escape_encoded_alt_text(ctx['body'])
 
         ensuredir(path.dirname(outfilename))
         self.dump_context(ctx, outfilename)

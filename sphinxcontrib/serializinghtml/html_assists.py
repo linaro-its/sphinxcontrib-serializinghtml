@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup, element
-import json
 import sys
+from html import escape
 
 def clean_href(href: str) -> str:
     """ Make sure the href doesn't start or end with a / """
@@ -31,6 +31,20 @@ def convert_tag_to_link(item_entry: element.Tag) -> dict:
             "text": a_tag.contents[0],
             "href": clean_href(a_tag["href"])
         }
+
+def escape_encoded_alt_text(html: str) -> str:
+    soup = BeautifulSoup(html, "html.parser")
+    images = soup.find_all('img')
+    for img in images:
+        if img['alt'] != "":
+            # At this point, Beautiful Soup has done what a browser does - decode
+            # any encoded attributes. So we need to re-encode the string, see if
+            # there are any ampersands and, if so, re-encode them again.
+            interim = escape(img['alt'])
+            if interim.find("&") != -1:
+                img['alt'] = escape(interim)
+
+    return html
 
 def convert_nav_html_to_json(html: str) -> list:
     result = []
