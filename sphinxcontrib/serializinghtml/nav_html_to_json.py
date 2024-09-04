@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup, element
 import json
+import sys
 
 def clean_href(href: str) -> str:
     """ Make sure the href doesn't start or end with a / """
@@ -39,7 +40,7 @@ def convert_nav_html_to_json(html: str) -> list:
     ul = soup.ul
     pending_divider = False
     # Iterate through list items
-    if ul is not None:
+    while ul is not None:
         for child in ul.children:
             if type(child) is element.Tag and child.name == "li":
                 # Is there a new unordered list within this section?
@@ -60,4 +61,9 @@ def convert_nav_html_to_json(html: str) -> list:
                         result.append({ "type": "divider" })
                         pending_divider = False
                     result.append(convert_tag_to_link(child))
+        while True:
+            ul = ul.next_sibling
+            if ul is None or type(ul) is element.Tag:
+                break
+            # Not an acceptable type - loop and get the next sibling
     return result
