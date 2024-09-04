@@ -33,6 +33,7 @@ def convert_tag_to_link(item_entry: element.Tag) -> dict:
         }
 
 def escape_encoded_alt_text(html: str) -> str:
+    edited = False
     soup = BeautifulSoup(html, "html.parser")
     images = soup.find_all('img')
     for img in images:
@@ -43,7 +44,10 @@ def escape_encoded_alt_text(html: str) -> str:
             interim = escape(img['alt'])
             if interim.find("&") != -1:
                 img['alt'] = escape(interim)
+                edited = True
 
+    if edited:
+        html = str(soup)
     return html
 
 def convert_nav_html_to_json(html: str) -> list:
