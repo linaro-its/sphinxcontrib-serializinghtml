@@ -23,7 +23,7 @@ if TYPE_CHECKING:
         def load(self, file: Any, *args: Any, **kwargs: Any) -> Any: ...
         def loads(self, data: Any, *args: Any, **kwargs: Any) -> Any: ...
 
-__version__ = '2.0.0+Linaro-240904'
+__version__ = '2.0.0+Linaro-240904a'
 __version_info__ = (2, 0, 0)
 
 package_dir = path.abspath(path.dirname(__file__))
