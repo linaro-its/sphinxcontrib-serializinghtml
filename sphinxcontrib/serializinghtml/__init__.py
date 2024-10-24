@@ -23,7 +23,7 @@ if TYPE_CHECKING:
         def load(self, file: Any, *args: Any, **kwargs: Any) -> Any: ...
         def loads(self, data: Any, *args: Any, **kwargs: Any) -> Any: ...
 
-__version__ = '2.0.0+Linaro-240904b'
+__version__ = '2.0.0+Linaro-241024'
 __version_info__ = (2, 0, 0)
 
 package_dir = path.abspath(path.dirname(__file__))
@@ -104,6 +104,7 @@ class SerializingHTMLBuilder(StandaloneHTMLBuilder):
 
     def handle_page(self, pagename: str, ctx: dict[str, Any], templatename: str = 'page.html',
                     outfilename: str | None = None, event_arg: Any = None) -> None:
+        print(f"handle_page: {pagename}")
         ctx['current_page_name'] = pagename
         ctx.setdefault('pathto', lambda p: p)
         self.add_sidebars(pagename, ctx)
@@ -136,12 +137,16 @@ class SerializingHTMLBuilder(StandaloneHTMLBuilder):
             if isinstance(ctx[key], types.FunctionType):
                 del ctx[key]
 
-        # PJC: Some Linaro documentation has encoded attributes in image ALT text
-        # which then gets decoded when the HTML is loaded into the DOM, so
-        # we need to alter it by "escaping" the ampersands with &amp; to
-        # prevent the decoding.
         if "body" in ctx:
+            # PJC: Some Linaro documentation has encoded attributes in image ALT text
+            # which then gets decoded when the HTML is loaded into the DOM, so
+            # we need to alter it by "escaping" the ampersands with &amp; to
+            # prevent the decoding.
             ctx['body'] = html_assists.escape_encoded_alt_text(ctx['body'])
+            # PJC: Furthermore, if there is any formatted code with encoded attributes,
+            # e.g. < changed to &lt; then that also needs to be escaped because it is
+            # also getting decoded.
+            ctx['body'] = html_assists.escape_encoded_pre_text(ctx['body'])
 
         ensuredir(path.dirname(outfilename))
         self.dump_context(ctx, outfilename)
