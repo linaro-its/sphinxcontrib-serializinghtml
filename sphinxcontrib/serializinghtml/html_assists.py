@@ -91,29 +91,18 @@ def escape_encoded_alt_text(html: str) -> str:
         html = str(soup)
     return html
 
-def matched_pre(span) -> bool:
-    """ Check if this span is specifying the "pre" class """
-    if "class" not in span:
-        return False
-    classes = span["class"]
-    for this_class in classes:
-        if this_class == "pre":
-            return True
-    return False
-
 def escape_encoded_pre_text(html: str) -> str:
     edited = False
     soup = BeautifulSoup(html, "html.parser")
-    spans = soup.find_all('span')
+    spans = soup.find_all('span', class_="pre")
     for span in spans:
-        if matched_pre(span):
-            # At this point, Beautiful Soup has done what a browser does - decode
-            # any encoded attributes. So we need to re-encode the string, see if
-            # there are any ampersands and, if so, re-encode them again.
-            interim = escape(span.string)
-            if interim.find("&") != -1:
-                span.string = escape(interim)
-                edited = True
+        # At this point, Beautiful Soup has done what a browser does - decode
+        # any encoded attributes. So we need to re-encode the string, see if
+        # there are any ampersands and, if so, re-encode them again.
+        interim = escape(span.string)
+        if interim.find("&") != -1:
+            span.string = escape(interim)
+            edited = True
 
     if edited:
         html = str(soup)
