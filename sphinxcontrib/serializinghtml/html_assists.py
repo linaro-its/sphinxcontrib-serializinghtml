@@ -48,6 +48,7 @@ def process_section(result, child, section, pending_divider) -> bool:
             result.append({ "type": "divider" })
             pending_divider = False
         result.append(convert_tag_to_link(child))
+    return pending_divider
 
 def process_ul_children(result, ul):
     pending_divider = False
