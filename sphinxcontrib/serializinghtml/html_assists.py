@@ -115,12 +115,14 @@ def rewrite_hub_links(html: str, link_mappings: dict) -> str:
     links = soup.find_all('a')
     for link in links:
         for key in link_mappings:
+            # Check if the href starts with the key
             if link['href'].startswith(key):
                 # We have a match, so replace the href with the new one
                 link['href'] = link['href'].replace(key, link_mappings[key])
                 # We also have to remove ".html" from the end of the link
                 link['href'] = link['href'].replace(".html", "")
                 edited = True
+                break
 
     if edited:
         html = str(soup)
