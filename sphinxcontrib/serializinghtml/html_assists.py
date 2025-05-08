@@ -108,3 +108,20 @@ def escape_encoded_pre_text(html: str) -> str:
     if edited:
         html = str(soup)
     return html
+
+def rewrite_hub_links(html: str, link_mappings: dict) -> str:
+    edited = False
+    soup = BeautifulSoup(html, "html.parser")
+    links = soup.find_all('a')
+    for link in links:
+        for key in link_mappings:
+            if link['href'].startswith(key):
+                # We have a match, so replace the href with the new one
+                link['href'] = link['href'].replace(key, link_mappings[key])
+                # We also have to remove ".html" from the end of the link
+                link['href'] = link['href'].replace(".html", "")
+                edited = True
+
+    if edited:
+        html = str(soup)
+    return html
