@@ -23,7 +23,7 @@ if TYPE_CHECKING:
         def load(self, file: Any, *args: Any, **kwargs: Any) -> Any: ...
         def loads(self, data: Any, *args: Any, **kwargs: Any) -> Any: ...
 
-__version__ = '2.0.0+Linaro-241028'
+__version__ = '2.0.0+Linaro-250508'
 __version_info__ = (2, 0, 0)
 
 package_dir = path.abspath(path.dirname(__file__))
@@ -81,6 +81,15 @@ class SerializingHTMLBuilder(StandaloneHTMLBuilder):
         self.init_css_files()
         self.init_js_files()
         self.use_index = self.get_builder_config('use_index', 'html')
+        #
+        # PJC: New configuration to allow mapping of external links to
+        # relative Hub links.
+        link_mappings = None
+        try:
+            link_mappings = self.get_builder_config('link_mappings', 'html')
+        except AttributeError:
+            pass
+        self.link_mappings = link_mappings
 
     def get_target_uri(self, docname: str, typ: str | None = None) -> str:
         if docname == 'index':
@@ -146,6 +155,9 @@ class SerializingHTMLBuilder(StandaloneHTMLBuilder):
             # e.g. < changed to &lt; then that also needs to be escaped because it is
             # also getting decoded.
             ctx['body'] = html_assists.escape_encoded_pre_text(ctx['body'])
+            # PJC: Go through the body, looking for any <a> tags to see if they
+            # need to be re-mapped to a local Hub path.
+            ctx['body'] = html_assists.rewrite_hub_links(ctx['body'], self.link_mappings)
 
         ensuredir(path.dirname(outfilename))
         self.dump_context(ctx, outfilename)
