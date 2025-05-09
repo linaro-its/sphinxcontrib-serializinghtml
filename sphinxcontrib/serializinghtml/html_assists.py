@@ -125,6 +125,9 @@ def rewrite_hub_links(html: str, link_mappings: dict) -> str:
                 # which will also be the documentation root name
                 if link['href'] == "index":
                     link['href'] = link_mappings[key]
+                # Do we have a link that ENDS with "/index"? If we do, remove it
+                if link['href'].endswith("/index"):
+                    link['href'] = link['href'].replace("/index", "")
                 # Now put it all together ...
                 # So we should end up with something like:
                 # /library/onelab/onelab
