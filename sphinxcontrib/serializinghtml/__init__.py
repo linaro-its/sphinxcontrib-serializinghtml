@@ -23,7 +23,7 @@ if TYPE_CHECKING:
         def load(self, file: Any, *args: Any, **kwargs: Any) -> Any: ...
         def loads(self, data: Any, *args: Any, **kwargs: Any) -> Any: ...
 
-__version__ = '2.0.0+Linaro-250509b'
+__version__ = '2.0.0+Linaro-250509c'
 __version_info__ = (2, 0, 0)
 
 package_dir = path.abspath(path.dirname(__file__))
@@ -118,7 +118,7 @@ class SerializingHTMLBuilder(StandaloneHTMLBuilder):
         self.add_sidebars(pagename, ctx)
 
         # Add the toc tree as a JSON dictionary
-        ctx['toctree'] = html_assists.convert_nav_html_to_json(self._get_local_toctree(pagename))
+        ctx['toctree'] = html_assists.convert_nav_html_to_json(self._get_local_toctree(pagename, includehidden=True))
 
         if not outfilename:
             # PJC: Ensure that index files are actually written under the name of the
