@@ -117,15 +117,19 @@ def rewrite_hub_links(html: str, link_mappings: dict) -> str:
         for key in link_mappings:
             # Check if the href starts with the key
             if link['href'].startswith(key):
-                # We have a match, so temporarily strip the key from the href
+                # We have a match, so strip the key from the href
                 link['href'] = link['href'].replace(key, "")
                 # We also have to remove ".html" from the end of the link
                 link['href'] = link['href'].replace(".html", "")
-                # If we're just left with "index", replace it with the key
+                # If we're just left with "index", replace it with the value from the dictionary,
+                # which will also be the documentation root name
                 if link['href'] == "index":
-                    link['href'] = key
-                # Now we can add the new href
-                link['href'] = link_mappings[key] + link['href']
+                    link['href'] = link_mappings[key]
+                # Now put it all together ...
+                # So we should end up with something like:
+                # /library/onelab/onelab
+                # /library/laa/laa_getting_started
+                link['href'] = f"/library/{link_mappings[key]}/{link['href']}"
                 edited = True
                 break
 
