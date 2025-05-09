@@ -117,10 +117,15 @@ def rewrite_hub_links(html: str, link_mappings: dict) -> str:
         for key in link_mappings:
             # Check if the href starts with the key
             if link['href'].startswith(key):
-                # We have a match, so replace the href with the new one
-                link['href'] = link['href'].replace(key, link_mappings[key])
+                # We have a match, so temporarily strip the key from the href
+                link['href'] = link['href'].replace(key, "")
                 # We also have to remove ".html" from the end of the link
                 link['href'] = link['href'].replace(".html", "")
+                # If we're just left with "index", replace it with the key
+                if link['href'] == "index":
+                    link['href'] = key
+                # Now we can add the new href
+                link['href'] = link_mappings[key] + link['href']
                 edited = True
                 break
 
