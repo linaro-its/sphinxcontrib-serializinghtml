@@ -61,17 +61,25 @@ def process_ul_children(result, ul):
 def convert_nav_html_to_json(html: str) -> list:
     result = []
     soup = BeautifulSoup(html, "html.parser")
+    top_level_tags = soup.find_all(recursive=False)
 
-    # Start with the unordered list
-    ul = soup.ul
-    # Iterate through list items
-    while ul is not None:
-        process_ul_children(result, ul)
-        while True:
-            ul = ul.next_sibling
-            if ul is None or type(ul) is element.Tag:
-                break
-            # Not an acceptable type - loop and get the next sibling
+    caption = None
+    for tag in top_level_tags:
+        if type(tag) is element.Tag and tag.name == "p" and tag.has_attr("class") and "caption" in tag["class"]:
+            span = tag.findChild("span")
+            caption = span.text
+        elif type(tag) is element.Tag and tag.name == "ul":
+            if caption is not None:
+                local_result = []
+                process_ul_children(local_result, tag)
+                result.append({
+                    "type": "section-group",
+                    "title": caption,
+                    "items": local_result
+                })
+                caption = None
+            else:
+                process_ul_children(result, tag)
     return result
 
 def escape_encoded_alt_text(html: str) -> str:
