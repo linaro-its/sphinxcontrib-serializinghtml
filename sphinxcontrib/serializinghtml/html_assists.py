@@ -89,18 +89,37 @@ def escape_encoded_alt_text(html: str) -> str:
         html = str(soup)
     return html
 
+def re_encode_span_tags(span_tags, edited) -> bool:
+    for span_tag in span_tags:
+        interim = escape(span_tag.string)
+        if interim.find("&") != -1:
+            span_tag.string = escape(interim)
+            edited = True
+    return edited
+
 def escape_encoded_pre_text(html: str) -> str:
+    # The reason for this function is because, when the browser loads the
+    # HTML from the JSON data, it decodes any encoded attributes, such as
+    # &lt; and &gt;, so we need to re-encode them to prevent the browser
+    # from decoding them.
+    #
+    # There are two separate search cases that are implemented here:
+    #
+    # 1. The <span> tags that are used to format code in the HTML, which
+    #    are used in the "pre" tags.
+    # 2. The <pre> tags themselves, which may contain code that has been
+    #    formatted with HTML entities, such as &lt; and &gt;.
+
     edited = False
     soup = BeautifulSoup(html, "html.parser")
-    spans = soup.find_all('span', class_="pre")
-    for span in spans:
-        # At this point, Beautiful Soup has done what a browser does - decode
-        # any encoded attributes. So we need to re-encode the string, see if
-        # there are any ampersands and, if so, re-encode them again.
-        interim = escape(span.string)
-        if interim.find("&") != -1:
-            span.string = escape(interim)
-            edited = True
+
+    span_tags = soup.find_all('span', class_="pre")
+    edited = re_encode_span_tags(span_tags, edited)
+
+    pre_tags = soup.find_all('pre')
+    for pre_tag in pre_tags:
+        span_tags = pre_tag.find_all("span")
+        edited = re_encode_span_tags(span_tags, edited)
 
     if edited:
         html = str(soup)
