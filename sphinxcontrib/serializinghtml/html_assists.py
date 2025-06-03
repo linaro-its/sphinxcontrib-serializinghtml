@@ -91,10 +91,12 @@ def escape_encoded_alt_text(html: str) -> str:
 
 def re_encode_span_tags(span_tags, edited) -> bool:
     for span_tag in span_tags:
-        interim = escape(span_tag.string)
-        if interim.find("&") != -1:
-            span_tag.string = escape(interim)
-            edited = True
+        content = span_tag.string
+        if content is not None:
+            interim = escape(content)
+            if interim.find("&") != -1:
+                span_tag.string = escape(interim)
+                edited = True
     return edited
 
 def escape_encoded_pre_text(html: str) -> str:
