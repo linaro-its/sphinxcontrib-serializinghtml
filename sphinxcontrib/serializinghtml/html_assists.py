@@ -16,9 +16,8 @@ def section_links(parent_entry: element.Tag, list_entry: element.Tag) -> dict:
         if type(child) is element.Tag and child.name == "li":
             section_result.append(convert_tag_to_link(child))
     return {
-                "type": "expandable-link-group",
+                "type": "section",
                 "text": parent_entry.contents[0].contents[0],
-                "href": clean_href(parent_entry.contents[0]["href"]),
                 "items": section_result
             }
 
@@ -31,32 +30,22 @@ def convert_tag_to_link(item_entry: element.Tag) -> dict:
             "href": clean_href(a_tag["href"])
         }
 
-def process_section(result, child, section, pending_divider) -> bool:
+def process_section(result, child, section):
+    # Is there a new unordered list within this section?
     if section != []:
-                # Yes, there is, so we have a sub-section. If we've got some content
-                # already, add a divider.
-        if result != []:
-            result.append({ "type": "divider" })
-                # Now append the current page and the section links. The
-                # ul tag is the only child returned, hence [0]
+        result.append({ "type": "divider" })
+        # Now append the current page and the section links. The
+        # ul tag is the only child returned, hence [0]
         result.append(section_links(child, section[0]))
-                # If there are any "normal" entries after this section
-                # add a divider first
-        pending_divider = True
+        result.append({ "type": "divider" })
     else:
-        if pending_divider:
-            result.append({ "type": "divider" })
-            pending_divider = False
         result.append(convert_tag_to_link(child))
-    return pending_divider
 
 def process_ul_children(result, ul):
-    pending_divider = False
     for child in ul.children:
         if type(child) is element.Tag and child.name == "li":
-            # Is there a new unordered list within this section?
             section = child.find_all("ul", limit=1)
-            pending_divider = process_section(result, child, section, pending_divider)
+            process_section(result, child, section)
 
 def convert_nav_html_to_json(html: str) -> list:
     result = []
@@ -100,18 +89,37 @@ def escape_encoded_alt_text(html: str) -> str:
         html = str(soup)
     return html
 
+def re_encode_span_tags(span_tags, edited) -> bool:
+    for span_tag in span_tags:
+        interim = escape(span_tag.string)
+        if interim.find("&") != -1:
+            span_tag.string = escape(interim)
+            edited = True
+    return edited
+
 def escape_encoded_pre_text(html: str) -> str:
+    # The reason for this function is because, when the browser loads the
+    # HTML from the JSON data, it decodes any encoded attributes, such as
+    # &lt; and &gt;, so we need to re-encode them to prevent the browser
+    # from decoding them.
+    #
+    # There are two separate search cases that are implemented here:
+    #
+    # 1. The <span> tags that are used to format code in the HTML, which
+    #    are used in the "pre" tags.
+    # 2. The <pre> tags themselves, which may contain code that has been
+    #    formatted with HTML entities, such as &lt; and &gt;.
+
     edited = False
     soup = BeautifulSoup(html, "html.parser")
-    spans = soup.find_all('span', class_="pre")
-    for span in spans:
-        # At this point, Beautiful Soup has done what a browser does - decode
-        # any encoded attributes. So we need to re-encode the string, see if
-        # there are any ampersands and, if so, re-encode them again.
-        interim = escape(span.string)
-        if interim.find("&") != -1:
-            span.string = escape(interim)
-            edited = True
+
+    span_tags = soup.find_all('span', class_="pre")
+    edited = re_encode_span_tags(span_tags, edited)
+
+    pre_tags = soup.find_all('pre')
+    for pre_tag in pre_tags:
+        span_tags = pre_tag.find_all("span")
+        edited = re_encode_span_tags(span_tags, edited)
 
     if edited:
         html = str(soup)
