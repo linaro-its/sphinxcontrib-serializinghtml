@@ -1,6 +1,10 @@
 from bs4 import BeautifulSoup, element
-import sys
 from html import escape
+from urllib.parse import urlparse
+
+def is_relative_url(url):
+    parsed = urlparse(url)
+    return not parsed.scheme and not parsed.netloc
 
 def clean_href(href: str) -> str:
     """ Make sure the href doesn't start or end with a / """
@@ -127,11 +131,26 @@ def escape_encoded_pre_text(html: str) -> str:
         html = str(soup)
     return html
 
-def rewrite_hub_links(html: str, link_mappings: dict) -> str:
+def rewrite_hub_links(html: str, link_mappings: dict, page_filename: str) -> str:
     edited = False
     soup = BeautifulSoup(html, "html.parser")
     links = soup.find_all('a')
+    # Need to calculate what the start of page_filename looks like
+    # up to the first separator.
+    page_filename_head, _, _ = page_filename.partition("/")
     for link in links:
+        # Check for relative links that need adjusting relative to where
+        # we are in the URL structure. Do this *before* performing the link
+        # mapping because the latter introduces more relative links to check.
+        if is_relative_url(link['href']) and link['href'][0] not in ['#', '/']:
+            if link['href'].startswith(page_filename):
+                # We need to drop the bit that goes up to the first / in
+                # the link because otherwise it gets duplicated when
+                # Next.js processes it.
+                link['href'] = link['href'][len(page_filename_head)+1:]
+                edited = True
+
+        # Now map from external URLs to internal relative URLs.
         for key in link_mappings:
             # Check if the href starts with the key
             if link['href'].startswith(key):
