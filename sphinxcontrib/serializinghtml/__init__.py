@@ -23,7 +23,7 @@ if TYPE_CHECKING:
         def load(self, file: Any, *args: Any, **kwargs: Any) -> Any: ...
         def loads(self, data: Any, *args: Any, **kwargs: Any) -> Any: ...
 
-__version__ = '2.0.0+Linaro-250603a'
+__version__ = '2.0.0+Linaro-250618'
 __version_info__ = (2, 0, 0)
 
 package_dir = path.abspath(path.dirname(__file__))
@@ -157,7 +157,7 @@ class SerializingHTMLBuilder(StandaloneHTMLBuilder):
             ctx['body'] = html_assists.escape_encoded_pre_text(ctx['body'])
             # PJC: Go through the body, looking for any <a> tags to see if they
             # need to be re-mapped to a local Hub path.
-            ctx['body'] = html_assists.rewrite_hub_links(ctx['body'], self.link_mappings)
+            ctx['body'] = html_assists.rewrite_hub_links(ctx['body'], self.link_mappings, page_filename)
 
         ensuredir(path.dirname(outfilename))
         self.dump_context(ctx, outfilename)
