@@ -131,47 +131,62 @@ def escape_encoded_pre_text(html: str) -> str:
         html = str(soup)
     return html
 
-def rewrite_hub_links(html: str, link_mappings: dict, page_filename: str) -> str:
-    edited = False
-    soup = BeautifulSoup(html, "html.parser")
-    links = soup.find_all('a')
-    # Need to calculate what the start of page_filename looks like
-    # up to the first separator.
-    page_filename_head, _, _ = page_filename.partition("/")
-    for link in links:
-        # Check for relative links that need adjusting relative to where
-        # we are in the URL structure. Do this *before* performing the link
-        # mapping because the latter introduces more relative links to check.
+def process_relative_links(link: dict, page_filename: str, page_filename_head: str) -> bool:
+    # Check for relative links that need adjusting relative to where
+    # we are in the URL structure. Do this *before* performing the link
+    # mapping because the latter introduces more relative links to check.
+    print(f"rewrite_hub_links: adjusting relative link: {link['href']}")
+    if page_filename_head != page_filename:
         if is_relative_url(link['href']) and link['href'][0] not in ['#', '/']:
             if link['href'].startswith(page_filename):
                 # We need to drop the bit that goes up to the first / in
                 # the link because otherwise it gets duplicated when
                 # Next.js processes it.
                 link['href'] = link['href'][len(page_filename_head)+1:]
-                edited = True
+                print(f"rewrite_hub_links: adjusted relative link: {link['href']}")
+                return True
+            print("rewrite_hub_links: no change")
+    else:
+        print("rewrite_hub_links: no relative link adjustment needed")
+    return False
 
-        # Now map from external URLs to internal relative URLs.
-        for key in link_mappings:
-            # Check if the href starts with the key
-            if link['href'].startswith(key):
-                # We have a match, so strip the key from the href
-                link['href'] = link['href'].replace(key, "")
-                # We also have to remove ".html" from the end of the link
-                link['href'] = link['href'].replace(".html", "")
-                # If we're just left with "index", replace it with the value from the dictionary,
-                # which will also be the documentation root name
-                if link['href'] == "index":
-                    link['href'] = link_mappings[key]
-                # Do we have a link that ENDS with "/index"? If we do, remove it
-                if link['href'].endswith("/index"):
-                    link['href'] = link['href'].replace("/index", "")
-                # Now put it all together ...
-                # So we should end up with something like:
-                # /library/onelab/onelab
-                # /library/laa/laa_getting_started
-                link['href'] = f"/library/{link_mappings[key]}/{link['href']}"
-                edited = True
-                break
+def process_link_mappings(link: dict, link_mappings: dict) -> bool:
+    for key in link_mappings:
+        # Check if the href starts with the key
+        if link['href'].startswith(key):
+            # We have a match, so strip the key from the href
+            link['href'] = link['href'].replace(key, "")
+            # We also have to remove ".html" from the end of the link
+            link['href'] = link['href'].replace(".html", "")
+            # If we're just left with "index", replace it with the value from the dictionary,
+            # which will also be the documentation root name
+            if link['href'] == "index":
+                link['href'] = link_mappings[key]
+            # Do we have a link that ENDS with "/index"? If we do, remove it
+            if link['href'].endswith("/index"):
+                link['href'] = link['href'].replace("/index", "")
+            # Now put it all together ...
+            # So we should end up with something like:
+            # /library/onelab/onelab
+            # /library/laa/laa_getting_started
+            link['href'] = f"/library/{link_mappings[key]}/{link['href']}"
+            return True
+    return False
+
+def rewrite_hub_links(html: str, link_mappings: dict, page_filename: str) -> str:
+    print(f"rewrite_hub_links: page_filename={page_filename}")
+    edited = False
+    soup = BeautifulSoup(html, "html.parser")
+    links = soup.find_all('a')
+    # Need to calculate what the start of page_filename looks like
+    # up to the first separator.
+    page_filename_head, _, _ = page_filename.partition("/")
+    print(f"rewrite_hub_links: page_filename_head={page_filename_head}")
+    for link in links:
+        if process_relative_links(link, page_filename, page_filename_head):
+            edited = True
+        if process_link_mappings(link, link_mappings):
+            edited = True
 
     if edited:
         html = str(soup)
