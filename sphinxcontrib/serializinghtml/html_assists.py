@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup, element
 from html import escape
 from urllib.parse import urlparse
+from pathlib import PurePosixPath
+import re
 
 def is_relative_url(url):
     parsed = urlparse(url)
@@ -131,19 +133,40 @@ def escape_encoded_pre_text(html: str) -> str:
         html = str(soup)
     return html
 
+def resolve_relative_path(base, relative):
+    base_parts = PurePosixPath(base).parts
+    rel_parts = PurePosixPath(relative).parts
+
+    stack = list(base_parts)
+
+    for part in rel_parts:
+        if part == "..":
+            if stack:
+                stack.pop()
+        elif part != ".":
+            stack.append(part)
+
+    return "/".join(stack)
+
 def process_relative_links(link: dict, page_filename: str, page_filename_head: str) -> bool:
     # Check for relative links that need adjusting relative to where
     # we are in the URL structure. Do this *before* performing the link
     # mapping because the latter introduces more relative links to check.
-    print(f"rewrite_hub_links: adjusting relative link: {link['href']}")
+    href_link = link['href']
+    print(f"rewrite_hub_links: adjusting relative link: {href_link}")
     if page_filename_head != page_filename:
-        if is_relative_url(link['href']) and link['href'][0] not in ['#', '/']:
-            if link['href'].startswith(page_filename):
+        if is_relative_url(href_link) and href_link[0] not in ['#', '/']:
+            if href_link.startswith(page_filename):
                 # We need to drop the bit that goes up to the first / in
                 # the link because otherwise it gets duplicated when
                 # Next.js processes it.
-                link['href'] = link['href'][len(page_filename_head)+1:]
-                print(f"rewrite_hub_links: adjusted relative link: {link['href']}")
+                link['href'] = href_link[len(page_filename_head)+1:]
+                print(f"rewrite_hub_links: new relative link: {link['href']}")
+                return True
+            if href_link.startswith("../"):
+                # Calculate the eventual path
+                link['href'] = resolve_relative_path(page_filename_head, href_link)
+                print(f"rewrite_hub_links: new relative link: {link['href']}")
                 return True
             print("rewrite_hub_links: no change")
     else:
