@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup, element
 from html import escape
 from urllib.parse import urlparse
+from pathlib import PurePosixPath
 
 def is_relative_url(url):
     parsed = urlparse(url)
@@ -37,7 +38,9 @@ def convert_tag_to_link(item_entry: element.Tag) -> dict:
 def process_section(result, child, section):
     # Is there a new unordered list within this section?
     if section != []:
-        result.append({ "type": "divider" })
+        # Only add a starting divider if there is already content
+        if result != []:
+            result.append({ "type": "divider" })
         # Now append the current page and the section links. The
         # ul tag is the only child returned, hence [0]
         result.append(section_links(child, section[0]))
@@ -131,6 +134,27 @@ def escape_encoded_pre_text(html: str) -> str:
         html = str(soup)
     return html
 
+def relative_traversal(from_path, to_path):
+    from_parts = PurePosixPath(from_path).parts
+    to_parts = PurePosixPath(to_path).parts
+
+    # Find common prefix length
+    common_length = 0
+    for f, t in zip(from_parts, to_parts):
+        if f == t:
+            common_length += 1
+        else:
+            break
+
+    # Steps up from 'from_path' to common ancestor
+    # Need to reduce the step count by one because of the way
+    # Next.js handles routes.
+    up_steps = len(from_parts) - common_length - 1
+    down_path = to_parts[common_length:]
+
+    result = "../" * up_steps + "/".join(down_path)
+    return result
+
 def process_relative_links(link: dict, page_filename: str, page_filename_head: str) -> bool:
     # Check for relative links that need adjusting relative to where
     # we are in the URL structure. Do this *before* performing the link
@@ -146,6 +170,14 @@ def process_relative_links(link: dict, page_filename: str, page_filename_head: s
                 link['href'] = href_link[len(page_filename_head)+1:]
                 print(f"rewrite_hub_links: new relative link: {link['href']}")
                 return True
+            # If we aren't on the same path, and we don't have any traversal
+            # at the start of the path, calculate the traversal required.
+            if not href_link.startswith("../"):
+                new_path = relative_traversal(page_filename, href_link)
+                if new_path != href_link:
+                    link['href'] = new_path
+                    print(f"rewrite_hub_links: new relative link: {link['href']}")
+                    return True
             print("rewrite_hub_links: no change")
     else:
         print("rewrite_hub_links: no relative link adjustment needed")
