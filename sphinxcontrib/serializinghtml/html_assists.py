@@ -139,7 +139,7 @@ def process_relative_links(link: dict, page_filename: str, page_filename_head: s
     print(f"rewrite_hub_links: adjusting relative link: {href_link}")
     if page_filename_head != page_filename:
         if is_relative_url(href_link) and href_link[0] not in ['#', '/']:
-            if href_link.startswith(page_filename):
+            if href_link.startswith(page_filename_head):
                 # We need to drop the bit that goes up to the first / in
                 # the link because otherwise it gets duplicated when
                 # Next.js processes it.
