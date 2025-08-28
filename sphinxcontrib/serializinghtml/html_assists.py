@@ -187,13 +187,16 @@ def process_link_mappings(link: dict, link_mappings: dict) -> bool:
     for key in link_mappings:
         # Check if the href starts with the key
         if link['href'].startswith(key):
+            print(f"process_link_mappings: matched {link['href']} against mapping")
             # We have a match, so strip the key from the href
             link['href'] = link['href'].replace(key, "")
+            print(f"process_link_mappings: after removing key, we're left with {link['href']}")
             # We also have to remove ".html" from the end of the link
             link['href'] = link['href'].replace(".html", "")
-            # If we're just left with "index", replace it with the value from the dictionary,
-            # which will also be the documentation root name
-            if link['href'] == "index":
+            # If we're just left with "index", or if we have nothing left, replace it
+            # with the value from the dictionary, which will also be the documentation
+            # root name
+            if link['href'] == "index" or link['href'] == "":
                 link['href'] = link_mappings[key]
             # Do we have a link that ENDS with "/index"? If we do, remove it
             if link['href'].endswith("/index"):
@@ -203,6 +206,7 @@ def process_link_mappings(link: dict, link_mappings: dict) -> bool:
             # /library/onelab/onelab
             # /library/laa/laa_getting_started
             link['href'] = f"/library/{link_mappings[key]}/{link['href']}"
+            print(f"process_link_mappings: mapped to {link['href']}")
             return True
     return False
 
