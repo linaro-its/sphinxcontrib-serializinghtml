@@ -10,6 +10,7 @@ from sphinx.application import ENV_PICKLE_FILENAME, Sphinx
 from sphinx.builders.html import BuildInfo, StandaloneHTMLBuilder
 from sphinx.locale import get_translation
 from sphinx.util.osutil import SEP, copyfile, ensuredir, os_path
+from sphinx.writers.html5 import HTML5Translator
 
 from sphinxcontrib.serializinghtml import html_assists, jsonimpl
 
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
         def load(self, file: Any, *args: Any, **kwargs: Any) -> Any: ...
         def loads(self, data: Any, *args: Any, **kwargs: Any) -> Any: ...
 
-__version__ = '2.0.0+Linaro-250828'
+__version__ = '2.0.0+Linaro-251021'
 __version_info__ = (2, 0, 0)
 
 package_dir = path.abspath(path.dirname(__file__))
@@ -34,6 +35,17 @@ __ = get_translation(__name__, 'console')
 #: the filename for the "last build" file (for serializing builders)
 LAST_BUILD_FILENAME = 'last_build'
 
+class CustomSerializingTranslator(HTML5Translator):
+    """
+    Custom translator to add 'document-content-section' class
+    to all <section> tags.
+    """
+    def visit_section(self, node):
+        print("visit_section called")
+        node.setdefault('classes', []).append('document-content-section')
+        
+        # Call the *original* parent method
+        super().visit_section(node)
 
 class SerializingHTMLBuilder(StandaloneHTMLBuilder):
     """
@@ -52,6 +64,8 @@ class SerializingHTMLBuilder(StandaloneHTMLBuilder):
 
     supported_image_types = ['image/svg+xml', 'image/png',
                              'image/gif', 'image/jpeg']
+    
+    default_translator_class = CustomSerializingTranslator
 
     def init(self) -> None:
         self.build_info = BuildInfo(self.config, self.tags)
