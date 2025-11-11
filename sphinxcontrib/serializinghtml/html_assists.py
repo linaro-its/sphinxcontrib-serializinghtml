@@ -119,19 +119,19 @@ def escape_encoded_pre_text(html: str) -> str:
     # 2. The <pre> tags themselves, which may contain code that has been
     #    formatted with HTML entities, such as &lt; and &gt;.
 
-    edited = False
-    soup = BeautifulSoup(html, "html.parser")
+    # edited = False
+    # soup = BeautifulSoup(html, "html.parser")
 
-    span_tags = soup.find_all('span', class_="pre")
-    edited = re_encode_span_tags(span_tags, edited)
+    # span_tags = soup.find_all('span', class_="pre")
+    # edited = re_encode_span_tags(span_tags, edited)
 
     # pre_tags = soup.find_all('pre')
     # for pre_tag in pre_tags:
     #     span_tags = pre_tag.find_all("span")
     #     edited = re_encode_span_tags(span_tags, edited)
 
-    if edited:
-        html = str(soup)
+    # if edited:
+    #     html = str(soup)
     return html
 
 def relative_traversal(from_path, to_path):
