@@ -125,10 +125,10 @@ def escape_encoded_pre_text(html: str) -> str:
     span_tags = soup.find_all('span', class_="pre")
     edited = re_encode_span_tags(span_tags, edited)
 
-    pre_tags = soup.find_all('pre')
-    for pre_tag in pre_tags:
-        span_tags = pre_tag.find_all("span")
-        edited = re_encode_span_tags(span_tags, edited)
+    # pre_tags = soup.find_all('pre')
+    # for pre_tag in pre_tags:
+    #     span_tags = pre_tag.find_all("span")
+    #     edited = re_encode_span_tags(span_tags, edited)
 
     if edited:
         html = str(soup)
