@@ -15,6 +15,22 @@ def clean_href(href: str) -> str:
         href = href[:-1]
     return href
 
+def link_label(tag) -> str:
+    """Return a plain-string label for a navigation link/section.
+
+    Titles and headings can contain inline markup (inline code, emphasis,
+    <abbr>, ...). Reading ``tag.contents[0]`` in that case yields a
+    BeautifulSoup ``Tag`` object, which is not JSON serializable and makes
+    the JSON builder raise ``TypeError: Object of type Tag is not JSON
+    serializable``. Flattening the tag to its text content produces a plain
+    ``str`` (the correct form for a navigation label) and is safe for links
+    whose text is a single string node too.
+    """
+    if isinstance(tag, element.Tag):
+        return tag.get_text()
+    # Already a NavigableString / plain string.
+    return str(tag)
+
 def section_links(parent_entry: element.Tag, list_entry: element.Tag) -> dict:
     section_result = []
     for child in list_entry.children:
@@ -22,7 +38,13 @@ def section_links(parent_entry: element.Tag, list_entry: element.Tag) -> dict:
             section_result.append(convert_tag_to_link(child))
     return {
                 "type": "section",
-                "text": parent_entry.contents[0].contents[0],
+                # Use the full text of the link rather than its first child
+                # node: a title/heading may contain inline markup (code spans,
+                # emphasis, <abbr>, ...), in which case contents[0] is a bs4
+                # Tag, which is not JSON serializable and crashes the JSON
+                # builder. get_text() flattens any nested markup to a plain
+                # string, which is what a navigation label should be.
+                "text": link_label(parent_entry.contents[0]),
                 "items": section_result
             }
 
@@ -31,7 +53,9 @@ def convert_tag_to_link(item_entry: element.Tag) -> dict:
     a_tag = item_entry.contents[0]
     return {
             "type": "link",
-            "text": a_tag.contents[0],
+            # See section_links: flatten any inline markup in the link text to
+            # a plain string so the nav label is always JSON serializable.
+            "text": link_label(a_tag),
             "href": clean_href(a_tag["href"])
         }
 
